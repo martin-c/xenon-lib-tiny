@@ -1,0 +1,165 @@
+   1               		.file	"clock.c"
+   2               	__SP_H__ = 0x3e
+   3               	__SP_L__ = 0x3d
+   4               	__SREG__ = 0x3f
+   5               	__CCP__ = 0x34
+   6               	__tmp_reg__ = 0
+   7               	__zero_reg__ = 1
+   9               		.text
+  10               	.Ltext0:
+ 439               	.global	sysClockSetPrescaler
+ 441               	sysClockSetPrescaler:
+   1:xenon-lib-tiny/clock.c **** /*! \file
+   2:xenon-lib-tiny/clock.c ****  *  clock.c
+   3:xenon-lib-tiny/clock.c ****  *  xenon-lib-tiny
+   4:xenon-lib-tiny/clock.c ****  *
+   5:xenon-lib-tiny/clock.c ****  * Copyright (c) 2019 Martin Clemons
+   6:xenon-lib-tiny/clock.c ****  */
+   7:xenon-lib-tiny/clock.c **** #include <util/delay.h>
+   8:xenon-lib-tiny/clock.c **** #include "clock.h"
+   9:xenon-lib-tiny/clock.c **** 
+  10:xenon-lib-tiny/clock.c **** 
+  11:xenon-lib-tiny/clock.c **** /*** Private Global Variables ------------------------------------------------*/
+  12:xenon-lib-tiny/clock.c **** /*! \privatesection */
+  13:xenon-lib-tiny/clock.c **** 
+  14:xenon-lib-tiny/clock.c **** 
+  15:xenon-lib-tiny/clock.c **** /*** Public Global Variables -------------------------------------------------*/
+  16:xenon-lib-tiny/clock.c **** /*! \publicsection */
+  17:xenon-lib-tiny/clock.c **** 
+  18:xenon-lib-tiny/clock.c **** 
+  19:xenon-lib-tiny/clock.c **** /*** Private Function Prototypes ---------------------------------------------*/
+  20:xenon-lib-tiny/clock.c **** /*! \privatesection */
+  21:xenon-lib-tiny/clock.c **** 
+  22:xenon-lib-tiny/clock.c **** 
+  23:xenon-lib-tiny/clock.c **** /*** Interrupt Service Routines (ISR) ----------------------------------------*/
+  24:xenon-lib-tiny/clock.c **** /*! \privatesection */
+  25:xenon-lib-tiny/clock.c **** 
+  26:xenon-lib-tiny/clock.c **** 
+  27:xenon-lib-tiny/clock.c **** /*** Private Functions -------------------------------------------------------*/
+  28:xenon-lib-tiny/clock.c **** /*! \privatesection */
+  29:xenon-lib-tiny/clock.c **** 
+  30:xenon-lib-tiny/clock.c **** 
+  31:xenon-lib-tiny/clock.c **** /*** Public Functions --------------------------------------------------------*/
+  32:xenon-lib-tiny/clock.c **** /*! \publicsection */
+  33:xenon-lib-tiny/clock.c **** 
+  34:xenon-lib-tiny/clock.c **** /*! Set system clock prescaler.
+  35:xenon-lib-tiny/clock.c ****  * @param ps The prescale factor, set to `SYS_CLOCK_PRESCALE_DIV1` to disable
+  36:xenon-lib-tiny/clock.c ****  * prescaler.
+  37:xenon-lib-tiny/clock.c ****  */
+  38:xenon-lib-tiny/clock.c **** void sysClockSetPrescaler(enum sysClockPrescaler_e ps)
+  39:xenon-lib-tiny/clock.c **** {
+ 443               	.LM0:
+ 444               	.LFBB1:
+ 445               	/* prologue: function */
+ 446               	/* frame size = 0 */
+ 447               	/* stack size = 0 */
+ 448               	.L__stack_usage = 0
+  40:xenon-lib-tiny/clock.c ****     uint8_t mask;
+  41:xenon-lib-tiny/clock.c ****     if (ps == SYS_CLOCK_PRESCALE_DIV1) {
+ 450               	.LM1:
+ 451 0000 8F30      		cpi r24,lo8(15)
+ 452 0002 01F0      		breq .L4
+  42:xenon-lib-tiny/clock.c ****         // clear the PEN bit, other bits don't matter
+  43:xenon-lib-tiny/clock.c ****         mask = 0x00;
+  44:xenon-lib-tiny/clock.c ****     } else {
+  45:xenon-lib-tiny/clock.c ****         // set the PEN bit, bitshift mask 1 position
+  46:xenon-lib-tiny/clock.c ****         mask = (uint8_t)ps << 1 | CLKCTRL_PEN_bm;
+ 454               	.LM2:
+ 455 0004 880F      		lsl r24
+ 457               	.LM3:
+ 458 0006 8160      		ori r24,lo8(1)
+ 459               	.L3:
+  47:xenon-lib-tiny/clock.c ****     }
+  48:xenon-lib-tiny/clock.c ****     // wait for any pending clock changes to finish
+  49:xenon-lib-tiny/clock.c ****     loop_until_bit_is_clear(CLKCTRL.MCLKSTATUS, CLKCTRL_SOSC_bp);
+ 461               	.LM4:
+ 462 0008 9091 6300 		lds r25,99
+ 463 000c 90FD      		sbrc r25,0
+ 464 000e 00C0      		rjmp .L3
+  50:xenon-lib-tiny/clock.c ****     // enable changing protected registers
+  51:xenon-lib-tiny/clock.c ****     CPU_CCP = CCP_IOREG_gc;
+ 466               	.LM5:
+ 467 0010 98ED      		ldi r25,lo8(-40)
+ 468 0012 94BF      		out __CCP__,r25
+  52:xenon-lib-tiny/clock.c ****     // set mask
+  53:xenon-lib-tiny/clock.c ****     CLKCTRL.MCLKCTRLB = mask;
+ 470               	.LM6:
+ 471 0014 8093 6100 		sts 97,r24
+ 472               	/* epilogue start */
+  54:xenon-lib-tiny/clock.c **** }
+ 474               	.LM7:
+ 475 0018 0895      		ret
+ 476               	.L4:
+  43:xenon-lib-tiny/clock.c ****     } else {
+ 478               	.LM8:
+ 479 001a 80E0      		ldi r24,0
+ 480 001c 00C0      		rjmp .L3
+ 485               	.Lscope1:
+ 488               	.global	sysClockSetSource
+ 490               	sysClockSetSource:
+  55:xenon-lib-tiny/clock.c **** 
+  56:xenon-lib-tiny/clock.c **** /*! Set system clock source.
+  57:xenon-lib-tiny/clock.c ****  * @param source The clock source to use.
+  58:xenon-lib-tiny/clock.c ****  * Note: When changing clock sources and prescalers, ensure that even transient
+  59:xenon-lib-tiny/clock.c ****  * combinations of clock source and prescaler do not exceed the manximum system
+  60:xenon-lib-tiny/clock.c ****  * clock frequency for a given voltage and temperature range.
+  61:xenon-lib-tiny/clock.c ****  */
+  62:xenon-lib-tiny/clock.c **** void sysClockSetSource(enum sysClockSource_e source)
+  63:xenon-lib-tiny/clock.c **** {
+ 492               	.LM9:
+ 493               	.LFBB2:
+ 494               	/* prologue: function */
+ 495               	/* frame size = 0 */
+ 496               	/* stack size = 0 */
+ 497               	.L__stack_usage = 0
+  64:xenon-lib-tiny/clock.c ****     // save state of CLKOUT pin
+  65:xenon-lib-tiny/clock.c ****     uint8_t mask = CLKCTRL.MCLKCTRLA & CLKCTRL_CLKOUT_bm;
+ 499               	.LM10:
+ 500 001e 9091 6000 		lds r25,96
+ 502               	.LM11:
+ 503 0022 9078      		andi r25,lo8(-128)
+  66:xenon-lib-tiny/clock.c ****     mask |= source;
+ 505               	.LM12:
+ 506 0024 982B      		or r25,r24
+ 507               	.L7:
+  67:xenon-lib-tiny/clock.c ****     // wait for any pending clock changes to finish
+  68:xenon-lib-tiny/clock.c ****     loop_until_bit_is_clear(CLKCTRL.MCLKSTATUS, CLKCTRL_SOSC_bp);
+ 509               	.LM13:
+ 510 0026 8091 6300 		lds r24,99
+ 511 002a 80FD      		sbrc r24,0
+ 512 002c 00C0      		rjmp .L7
+  69:xenon-lib-tiny/clock.c ****     // enable changing protected registers
+  70:xenon-lib-tiny/clock.c ****     CPU_CCP = CCP_IOREG_gc;
+ 514               	.LM14:
+ 515 002e 88ED      		ldi r24,lo8(-40)
+ 516 0030 84BF      		out __CCP__,r24
+  71:xenon-lib-tiny/clock.c ****     // set mask
+  72:xenon-lib-tiny/clock.c ****     CLKCTRL.MCLKCTRLA = mask;
+ 518               	.LM15:
+ 519 0032 9093 6000 		sts 96,r25
+ 520               	.L8:
+  73:xenon-lib-tiny/clock.c ****     // wait for change to complete
+  74:xenon-lib-tiny/clock.c ****     loop_until_bit_is_clear(CLKCTRL.MCLKSTATUS, CLKCTRL_SOSC_bp);
+ 522               	.LM16:
+ 523 0036 8091 6300 		lds r24,99
+ 524 003a 80FD      		sbrc r24,0
+ 525 003c 00C0      		rjmp .L8
+ 526               	/* epilogue start */
+  75:xenon-lib-tiny/clock.c **** }
+ 528               	.LM17:
+ 529 003e 0895      		ret
+ 531               	.Lscope2:
+ 533               	.Letext0:
+ 534               		.ident	"GCC: (GNU) 9.2.0"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 clock.c
+/var/folders/sn/53gkbhbn1cz6822gj2tg1lc40000gn/T//ccDv9XAX.s:2      *ABS*:000000000000003e __SP_H__
+/var/folders/sn/53gkbhbn1cz6822gj2tg1lc40000gn/T//ccDv9XAX.s:3      *ABS*:000000000000003d __SP_L__
+/var/folders/sn/53gkbhbn1cz6822gj2tg1lc40000gn/T//ccDv9XAX.s:4      *ABS*:000000000000003f __SREG__
+/var/folders/sn/53gkbhbn1cz6822gj2tg1lc40000gn/T//ccDv9XAX.s:5      *ABS*:0000000000000034 __CCP__
+/var/folders/sn/53gkbhbn1cz6822gj2tg1lc40000gn/T//ccDv9XAX.s:6      *ABS*:0000000000000000 __tmp_reg__
+/var/folders/sn/53gkbhbn1cz6822gj2tg1lc40000gn/T//ccDv9XAX.s:7      *ABS*:0000000000000001 __zero_reg__
+/var/folders/sn/53gkbhbn1cz6822gj2tg1lc40000gn/T//ccDv9XAX.s:441    .text:0000000000000000 sysClockSetPrescaler
+/var/folders/sn/53gkbhbn1cz6822gj2tg1lc40000gn/T//ccDv9XAX.s:490    .text:000000000000001e sysClockSetSource
+
+NO UNDEFINED SYMBOLS
