@@ -67,12 +67,4 @@ void clockConfigXOsc32k(enum xOsc32kStartupTime_e sut,
                         enum xOsc32kSourceType_e src,
                         bool runStdby);
 void clockStartXOsc32k(void);
-
-//void clockEnableOsc(enum clockSource_e src);
-//void clockDisableOsc(enum clockSource_e src);
-//void clockConfigXosc(enum clockXoscFreq_e freq, enum clockXoscSelection_e sel);
-//void clockSetSource(enum clockSource_e src);
-//void clockConfigPll(enum pllClockSource_e src, uint8_t fact);
-//void clockSetPSA(enum prescaleAFactor_e ps);
-//int8_t clockEnableDfllCalibration(enum clockDfllCalSource_e src);
-//void clockDisbaleDfllCalibration(void);
+void clockStopXOsc32k(void);
