@@ -9,6 +9,7 @@
 
 # Linker output
 *.ilk
+*.lst
 *.map
 *.exp
 

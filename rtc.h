@@ -38,7 +38,7 @@ enum rtcPrescale_e {
 };
 
 /*! RTC clock source selection
- *  Note: Although `RTC_CLOCK_SOURCE_XOSC32K` and `RTC_CLOCK_SOURCE_TOSC1` are distincy enum values,
+ *  Note: Although `RTC_CLOCK_SOURCE_XOSC32K` and `RTC_CLOCK_SOURCE_TOSC1` are distinct enum values,
  *  these values share the same `CLKSEL` value, `RTC_CLKSEL_TOSC32K_gc` or `0x02`. This enum assigns
  *  distinct values to these configurations to maintain a clearer representation of the actual
  *  hardware configuration.
@@ -46,8 +46,8 @@ enum rtcPrescale_e {
 enum rtcClockSource_e {
     RTC_CLOCK_SOURCE_INT32K     = RTC_CLKSEL_INT32K_gc,     ///< 32.768 kHz from internal ULP oscillator
     RTC_CLOCK_SOURCE_INT1K      = RTC_CLKSEL_INT1K_gc,      ///< 1.024 kHz from internal ULP oscillator
-    RTC_CLOCK_SOURCE_XOSC32K    = (0xF1<<0),                ///< 32.768 kHz from external 32KHz oscillator
-    RTC_CLOCK_SOURCE_TOSC1      = (0xF2<<0),                ///< External clock from TOSC1 pin
+    RTC_CLOCK_SOURCE_XOSC32K    = 0xF1,                     ///< 32.768 kHz from external 32KHz oscillator
+    RTC_CLOCK_SOURCE_TOSC1      = 0xF2,                     ///< External clock from TOSC1 pin
     RTC_CLOCK_SOURCE_EXTCLK     = RTC_CLKSEL_EXTCLK_gc,     ///< External clock from EXTCLK pin
 };
 
@@ -71,9 +71,27 @@ enum rtcInterruptPeriod_e {
     RTC_PIT_DIV32768    = RTC_PERIOD_CYC32768_gc,   ///< PIT interrupt raised every 32768 clock cycles
 };
 
+struct rtcConfig_s {
+    enum rtcClockSource_e src;
+    enum rtcPrescale_e ps;
+    uint16_t period;
+    uint16_t compare;
+    bool rtcRunStdby;
+    bool compareInterruptEnable;
+    bool overflowInterruptEnable;
+};
+
 
 
 /*** Public Functions --------------------------------------------------------*/
 /*! \publicsection */
 
+void rtcSetClockSource(enum rtcClockSource_e src);
 void rtcSetClockPrescaler(enum rtcPrescale_e ps);
+void rtcSetPeriod(uint16_t period);
+void rtcSetCompare(uint16_t compare);
+uint16_t rtcGetCount(void);
+void rtcSetCount(uint16_t count);
+void rtcInitEnable(struct rtcConfig_s *config);
+void rtcEnable(bool runStdby);
+void rtcDisable(void);

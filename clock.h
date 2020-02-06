@@ -66,5 +66,5 @@ void clockSetSysClockSource(enum sysClockSource_e source);
 void clockConfigXOsc32k(enum xOsc32kStartupTime_e sut,
                         enum xOsc32kSourceType_e src,
                         bool runStdby);
-void clockStartXOsc32k(void);
-void clockStopXOsc32k(void);
+void clockEnableXOsc32k(void);
+void clockDisableXOsc32k(void);

@@ -100,30 +100,26 @@ void clockConfigXOsc32k(enum xOsc32kStartupTime_e sut,
     // wait for oscillator stable flag to be 0 (datasheet section 10.5.9)
     loop_until_bit_is_clear(CLKCTRL.MCLKSTATUS, CLKCTRL_XOSC32KS_bp);
     // compute configuration mask
-    mask |= sut | src | ((runStdby == true) ? CLKCTRL_RUNSTDBY_bm: 0x0);
+    mask |= sut | src | (runStdby ? CLKCTRL_RUNSTDBY_bm: 0x0);
     // apply configuration
     CPU_CCP = CCP_IOREG_gc;
     CLKCTRL.XOSC32KCTRLA = mask;
-    if (mask & CLKCTRL_ENABLE_bm) {
-        // if oscillator was enabled wait for oscillator stable flag
-        loop_until_bit_is_set(CLKCTRL.MCLKSTATUS, CLKCTRL_XOSC32KS_bp);
-    }
 }
 
-/*! Start (enable) the external 32.768kHz oscillator. **not reentrant**
- *  Function waits for `XOSC32KS` flag bit to be set.
+/*! Enable the external 32.768kHz oscillator. **not reentrant**
+ *  Note: Once enabled, oscillator will automatically be started once it is set
+ *  as a clock source for a peripheral or the main clock.
  */
-void clockStartXOsc32k(void)
+void clockEnableXOsc32k(void)
 {
     uint8_t mask = CLKCTRL.XOSC32KCTRLA | CLKCTRL_ENABLE_bm;
     CPU_CCP = CCP_IOREG_gc;
     CLKCTRL.XOSC32KCTRLA = mask;
-    loop_until_bit_is_set(CLKCTRL.MCLKSTATUS, CLKCTRL_XOSC32KS_bp);
 }
 
 /*! Stop (disable) the external 32.768kHz oscillator. **not reentrant**
  */
-void clockStopXOsc32k(void)
+void clockDisableXOsc32k(void)
 {
     uint8_t mask = CLKCTRL.XOSC32KCTRLA & ~CLKCTRL_ENABLE_bm;
     CPU_CCP = CCP_IOREG_gc;
