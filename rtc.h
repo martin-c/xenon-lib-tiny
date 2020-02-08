@@ -71,14 +71,16 @@ enum rtcInterruptPeriod_e {
     RTC_PIT_DIV32768    = RTC_PERIOD_CYC32768_gc,   ///< PIT interrupt raised every 32768 clock cycles
 };
 
+/*! Configuration values for the RTC when using `rtcInitEnable` function.
+ */
 struct rtcConfig_s {
-    enum rtcClockSource_e src;
-    enum rtcPrescale_e ps;
-    uint16_t period;
-    uint16_t compare;
-    bool rtcRunStdby;
-    bool compareInterruptEnable;
-    bool overflowInterruptEnable;
+    enum rtcClockSource_e src;      ///< RTC clock source
+    enum rtcPrescale_e ps;          ///< RTC prescale
+    uint16_t period;                ///< 16-bit RTC period register value
+    uint16_t compare;               ///< 16-bit RTC compare register value
+    bool rtcRunStdby;               ///< True to enable RTC in standby sleep mode
+    bool compareInterruptEnable;    ///< True to enable RTC compare interrupt
+    bool overflowInterruptEnable;   ///< True to enable RTC overflow interrupt
 };
 
 
