@@ -48,12 +48,14 @@ void usartConfigPins(struct usartPinConfig_s *config)
  */
 void usartConfigInterrupts(struct usartInterruptConfig_s *config)
 {
-    USART0.CTRLA |=
-            (config->rxcInterruptEnable ? USART_RXCIE_bm : 0)       |
-            (config->txcInterruptEnable ? USART_TXCIE_bm : 0)       |
-            (config->dreInterruptEnable ? USART_DREIE_bm : 0)       |
-            (config->rxStartInterruptEnable ? USART_RXSIE_bm : 0)   |
-            (config->autoBaudErrorInterruptEnable ? USART_ABEIE_bm : 0);
+    uint8_t rs485_bits = USART0.CTRLA & 0x03;
+    USART0.CTRLA =
+            (config->rxcInterruptEnable ? USART_RXCIE_bm : 0)           |
+            (config->txcInterruptEnable ? USART_TXCIE_bm : 0)           |
+            (config->dreInterruptEnable ? USART_DREIE_bm : 0)           |
+            (config->rxStartInterruptEnable ? USART_RXSIE_bm : 0)       |
+            (config->autoBaudErrorInterruptEnable ? USART_ABEIE_bm : 0) |
+            rs485_bits;
 }
 
 /*! Configure the USART peripheral in asynchronous serial mode
