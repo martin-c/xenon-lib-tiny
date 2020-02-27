@@ -26,7 +26,6 @@ static volatile uint16_t rtcCount;
 /*! \privatesection */
 ISR(RTC_CNT_vect) {
     RTC.INTFLAGS |= RTC_OVF_bm;
-    PORTB_OUT ^= PIN4_bm;
     rtcCount++;
 }
 
