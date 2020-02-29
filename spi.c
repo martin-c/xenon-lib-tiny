@@ -119,6 +119,24 @@ void spiIo_24(uint8_t buf[3])
     buf[2] = SPI0.DATA;
 }
 
+/*! Same as spiIo24 except bytes are sent and received reversed. Useful for
+ * communicating with systems that have multi-bit variables that have the high
+ * byte first.
+ * @param buf Buffer to send and receive from (exactly 3 bytes).
+ */
+void spiIo_24_r(uint8_t buf[3])
+{
+    SPI0.INTFLAGS |= SPI_TXCIF_bm;
+    SPI0.DATA = buf[2];
+    SPI0.DATA = buf[1];
+    loop_until_bit_is_set(SPI0.INTFLAGS, SPI_DREIF_bp);
+    SPI0.DATA = buf[0];
+    buf[2] = SPI0.DATA;
+    loop_until_bit_is_set(SPI0.INTFLAGS, SPI_TXCIF_bp);
+    buf[1] = SPI0.DATA;
+    buf[0] = SPI0.DATA;
+}
+
 /*! Efficiently send and receive exactly 2 bytes (16 bits).
  * Same as `spiIo_24` except for 2 byte length.
  * @param buf Buffer to send and receive from (exactly 2 bytes).

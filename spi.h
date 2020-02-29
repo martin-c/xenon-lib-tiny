@@ -75,4 +75,5 @@ void spiConfigInterrupts(struct spiInterruptConfig_s *config);
 void spiConfigMaster(struct spiMasterConfig_s *config);
 void spiIo(uint8_t buf[], uint8_t len);
 void spiIo_24(uint8_t buf[3]);
+void spiIo_24_r(uint8_t buf[3]);
 void spiIo_16(uint8_t buf[2]);
