@@ -59,9 +59,9 @@ struct timerCounterBEventConfig_s {
 /*! \publicsection */
 uint16_t timerCounterBGetCounter(TCB_t *tcb);
 uint16_t timerCounterBGetCapture(TCB_t *tcb);
-void timerCounterBSetCompare(TCB_t *tcb, uint16_t cmp);
-void timerCounterBConfigEvent(TCB_t *tcb, struct timerCounterBEventConfig_s *config);
-void timerCounterBConfigInterrupts(TCB_t *tcb, bool captureInterruptEnable);
-void timerCounterBConfig(TCB_t *tcb, struct timerCounterBConfig_s *config);
+void timerCounterBSetCompare(TCB_t *tcb, const uint16_t cmp);
+void timerCounterBConfigEvent(TCB_t *tcb, const struct timerCounterBEventConfig_s *config);
+void timerCounterBConfigInterrupts(TCB_t *tcb, const bool captureInterruptEnable);
+void timerCounterBConfig(TCB_t *tcb, const struct timerCounterBConfig_s *config);
 void timerCounterBEnable(TCB_t *tcb);
 void timerCounterBDisable(TCB_t *tcb);

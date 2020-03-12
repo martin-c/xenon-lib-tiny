@@ -51,7 +51,7 @@ uint16_t timerCounterBGetCapture(TCB_t *tcb)
  * @param tcb Pointer to the TCB peripheral.
  * @param cmp The value to set capture/compare registers.
  */
-void timerCounterBSetCompare(TCB_t *tcb, uint16_t cmp)
+void timerCounterBSetCompare(TCB_t *tcb, const uint16_t cmp)
 {
     tcb->CCMP = cmp;
 }
@@ -60,7 +60,7 @@ void timerCounterBSetCompare(TCB_t *tcb, uint16_t cmp)
  * @param tcb Pointer to the TCB peripheral.
  * @param config Configuration parameters.
  */
-void timerCounterBConfigEvent(TCB_t *tcb, struct timerCounterBEventConfig_s *config)
+void timerCounterBConfigEvent(TCB_t *tcb, const struct timerCounterBEventConfig_s *config)
 {
     tcb->EVCTRL =
             (config->inputNoiseFilterEnable ? TCB_FILTER_bm : 0)    |
@@ -72,7 +72,7 @@ void timerCounterBConfigEvent(TCB_t *tcb, struct timerCounterBEventConfig_s *con
  * @param tcb
  * @param captureInterruptEnable Setting of the capture event interrupt.
  */
-void timerCounterBConfigInterrupts(TCB_t *tcb, bool captureInterruptEnable)
+void timerCounterBConfigInterrupts(TCB_t *tcb, const bool captureInterruptEnable)
 {
     tcb->INTCTRL = captureInterruptEnable ? TCB_CAPT_bm : 0;
 }
@@ -81,10 +81,10 @@ void timerCounterBConfigInterrupts(TCB_t *tcb, bool captureInterruptEnable)
  * @param tcb Pointer to the TCB peripheral.
  * @param config Configuration parameters.
  */
-void timerCounterBConfig(TCB_t *tcb, struct timerCounterBConfig_s *config)
+void timerCounterBConfig(TCB_t *tcb, const struct timerCounterBConfig_s *config)
 {
-    tcb->CTRLB = config->clockSource;
-    tcb->CTRLA = config->mode;
+    tcb->CTRLB = config->mode;
+    tcb->CTRLA = config->clockSource;
 }
 
 /*! Enable (start) Timer/Counter B.
