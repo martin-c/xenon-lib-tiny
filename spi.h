@@ -1,6 +1,6 @@
 /*! \file
  *  spi.h
- *  60345-100-digi-dac-firmware
+ *  xenon-lib-tiny
  *  Copyright (c) 2020 Martin Clemons
  *
  *  General configuration and utility functions for the SPI peripheral.

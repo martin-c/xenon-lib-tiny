@@ -1,6 +1,6 @@
 /*! \file
  *  spi.c
- *  60345-100-digi-dac-firmware
+ *  xenon-lib-tiny
  *  Copyright (c) 2020 Martin Clemons
  */
 #include "spi.h"

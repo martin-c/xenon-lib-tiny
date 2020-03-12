@@ -1,6 +1,6 @@
 /*! \file
  *  timer_counter_a.h
- *  60345-100-digi-dac-firmware
+ *  xenon-lib-tiny
  *  Copyright (c) 2020 Martin Clemons
  *
  *  Enter file description here.
