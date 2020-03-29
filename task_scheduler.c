@@ -249,7 +249,6 @@ void tsRemoveTask(task_t *task)
  */
 void tsMain(void)
 {
-    ERROR_LED_ON;
     // merge tasks added to list since the last iteration
     mergeAddList(&timedTasks);
     /* Iterate over the linked list of timed tasks, from the start of the list
@@ -328,5 +327,4 @@ void tsMain(void)
         }
         t = t->next;
     }
-    ERROR_LED_OFF;
 }
