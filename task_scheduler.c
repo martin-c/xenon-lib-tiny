@@ -303,14 +303,17 @@ void tsMain(void)
                 break;
 
             case TASK_CONDITIONAL:
-            case TASK_CONDITIONAL_SH:
                 if (t->params.conditional.cb(t->params.conditional.conditionalParam) == true) {
-                    // conditional check passed
                     // printf_P(PSTR("-> %p\r\n"), t);
                     t->cb(t->cbParam);
-                    if (t->type == TASK_CONDITIONAL_SH) {
-                        t->type = TASK_EMPTY;
-                    }
+                }
+                break;
+
+            case TASK_CONDITIONAL_SH:
+                if (t->params.conditional.cb(t->params.conditional.conditionalParam) == true) {
+                    // printf_P(PSTR("-> %p\r\n"), t);
+                    t->cb(t->cbParam);
+                    t->type = TASK_EMPTY;
                 }
                 break;
 
