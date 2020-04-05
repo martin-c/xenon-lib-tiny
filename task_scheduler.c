@@ -7,7 +7,6 @@
 
 #include "task_scheduler.h"
 #include <stdio.h>
-#include <boards/current.h>
 #include "rtc_timer.h"
 
 
