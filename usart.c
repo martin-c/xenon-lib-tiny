@@ -92,7 +92,7 @@ void usartConfigAsyncSerial(struct usartAsyncSerialConfig_s *config)
 int usartPutChar(char c, FILE *file)
 {
     // loop until USART tx register is ready for more data
-    while (bit_is_clear(USART0.STATUS, USART_DREIE_bp)) { }
+    while (bit_is_clear(USART0.STATUS, USART_DREIF_bp)) { }
     USART0.TXDATAL = c;
     return 0;
 }
