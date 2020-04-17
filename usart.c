@@ -3,6 +3,7 @@
  *  xenon-lib-tiny
  *  Copyright (c) 2020 Martin Clemons
  */
+#include <avr/sleep.h>
 #include "usart.h"
 
 
@@ -65,8 +66,7 @@ void usartConfigInterrupts(struct usartInterruptConfig_s *config)
 void usartConfigAsyncSerial(struct usartAsyncSerialConfig_s *config)
 {
     // clear interrupt status bits
-    USART0.STATUS = USART_TXCIF_bm | USART_RXSIF_bm | USART_ISFIF_bm | USART_ISFIF_bm |
-            USART_BDF_bm;
+    USART0.STATUS = USART_TXCIF_bm | USART_RXSIF_bm | USART_ISFIF_bm | USART_BDF_bm;
     // clear RS485 mode bits if set
     USART0.CTRLA &= ~0x03;
     // set USART mode, parityMode, stop bits, char size
@@ -80,6 +80,16 @@ void usartConfigAsyncSerial(struct usartAsyncSerialConfig_s *config)
             (config->txEnable ? USART_TXEN_bm : 0)                      |
             (config->startFrameDetectionEnable ? USART_SFDEN_bm : 0 )   |
             config->baudMode;
+}
+
+/*! Flush the USART receive buffer and clear several interrupt flags.
+ */
+void usartFlush(void)
+{
+    USART0.RXDATAL;
+    USART0.RXDATAL;
+    USART0.RXDATAL;
+    USART0.STATUS = USART_TXCIF_bm | USART_ISFIF_bm;
 }
 
 /*! Transmit a single character. Non-buffered, blocking. Function signature is
@@ -113,4 +123,55 @@ int usartGetChar(FILE *file)
         return _FDEV_ERR;
     }
     return (int)USART0.RXDATAL;
+}
+
+/*! Send up to 255 bytes from `buffer`. This is a blocking send, so the function
+ * will block until the last byte is written to the USART transmit buffer.
+ * @param buffer Pointer to the buffer from which to send.
+ * @param length Number of bytes to send (0 to 255).
+ * @param sleep Boolean indicating whether to call `sleep_mode()` while waiting
+ * for USART transmit buffer. Note: If `sleep` is `true` a wakeup source must be
+ * enabled (such as Data Register Empty Interrupt) which will wake the processor
+ * to send the next byte.
+ * Function returns as soon as last byte is written to transmit buffer, check
+ * `TXCIF` to determine when transmission is complete after function returns.
+ */
+void usartSendFromBuffer(const uint8_t *buffer, uint8_t length, bool sleep)
+{
+    uint8_t index = 0;
+    while (index < length) {
+        while(bit_is_clear(USART0.STATUS, USART_DREIF_bp)) {
+            if (sleep) {
+                sleep_mode();
+            }
+        }
+        USART0.TXDATAL = buffer[index];
+        index++;
+    }
+    // last byte(s) just written to buffer, clear TXCIF to enable
+    // detection of transmission end
+    USART0.STATUS |= USART_TXCIF_bm;
+}
+
+/*! Receive up to 255 bytes into `buffer`. This is a blocking receive, so the
+ * function will block until the last byte is read from the USART receive buffer.
+ * @param buffer Pointer to the buffer into which to receive.
+ * @param length Number of bytes to receive (0 to 255).
+ * @param sleep Boolean indicating whether to call `sleep_mode()` while waiting
+ * for USART to receive data. Note: If `sleep` is `true` a wakeup source must be
+ * enabled (such as Receive Complete Interrupt) which will wake the processor
+ * to receive the next byte.
+ */
+void usartReceiveToBuffer(uint8_t *buffer, uint8_t length, bool sleep)
+{
+    uint8_t index = 0;
+    while (index < length) {
+        while (bit_is_clear(USART0.STATUS, USART_RXCIF_bp)) {
+            if (sleep) {
+                sleep_mode();
+            }
+        }
+        buffer[index] = USART0.RXDATAL;
+        index++;
+    }
 }

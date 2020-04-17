@@ -76,5 +76,8 @@ struct usartAsyncSerialConfig_s {
 void usartConfigPins(struct usartPinConfig_s *config);
 void usartConfigInterrupts(struct usartInterruptConfig_s *config);
 void usartConfigAsyncSerial(struct usartAsyncSerialConfig_s *config);
+void usartFlush(void);
 int usartPutChar(char c, FILE *file);
 int usartGetChar(FILE *file);
+void usartSendFromBuffer(const uint8_t *buffer, uint8_t length, bool sleep);
+void usartReceiveToBuffer(uint8_t *buffer, uint8_t length, bool sleep);
