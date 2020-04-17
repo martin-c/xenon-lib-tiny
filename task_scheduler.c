@@ -34,6 +34,9 @@ static struct taskList_s {
     } add_list;
 } timedTasks, conditionalTasks;
 
+// The currently called task from `tsMain()`
+static task_t *currentTask;
+
 
 /*** Public Global Variables -------------------------------------------------*/
 /*! \publicsection */
@@ -58,10 +61,15 @@ static void mergeAddList(struct taskList_s *list);
  * @param task The task to add to the list.
  * Task is inserted at the beginning of the `add_list`. The `add_list.first`
  * and `add_list.last` data structures are updated.
+ * If task being added is equal to `currentTask`, task is already in a
+ * list and may be initialized in-place.
  */
 static void addTask(struct taskList_s *list, task_t *task)
 {
     // printf_P(PSTR("addTask: %p\r\n"), task);
+    if (task == currentTask) {
+        return;
+    }
     task->next = list->add_list.first;
     list->add_list.first = task;
     if (list->add_list.last == NULL) {
@@ -124,8 +132,8 @@ enum addStatus_e tsAddTimedTask(task_t *task, cb_t *cb, cbParam_t *cbParam, int1
     task->cb = cb;
     task->cbParam = cbParam;
     task->type = TASK_TIMED;
-    rtcTimerInit(&task->params.timed.dueTimer, period);
-    task->params.timed.period = period;
+    rtcTimerInit(&task->state.timed.dueTimer, period);
+    task->state.timed.period = period;
     addTask(&timedTasks, task);
     return TASK_INIT_OK;
 }
@@ -148,19 +156,23 @@ enum addStatus_e tsAddTimedSingleShotTask(task_t *task, cb_t *cb,
     task->cb = cb;
     task->cbParam = cbParam;
     task->type = TASK_TIMED;
-    rtcTimerInit(&task->params.timed.dueTimer, period);
-    task->params.timed.period = 0;
+    rtcTimerInit(&task->state.timed.dueTimer, period);
+    task->state.timed.period = 0;
     addTask(&timedTasks, task);
     return TASK_INIT_OK;
 }
 
-/*! Add a single-shot task. Task is called once the next time the scheduler runs.
+/*! Add an unconditional, optionally single-shot task.
+ * Task is called each time the scheduler runs, single-shot task is automatically
+ * removed after first call.
  * @param task Pointer to data structure where task is stored.
  * @param cb Pointer to the function which will be called by the scheduler (task).
  * @param cbParam The parameter passed to `cb` when it is called.
+ * @param singleShot If `true`, the task will only be called once after which it will
+ * be automatically removed.
  * @return returns `TASK_ADD_OK` if task added to scheduler, `TASK_ADD_ERROR` otherwise.
  */
-enum addStatus_e tsAddTask(task_t *task, cb_t *cb, cbParam_t *cbParam)
+enum addStatus_e tsAddTask(task_t *task, cb_t *cb, cbParam_t *cbParam, bool singleShot)
 {
     if (task == NULL || cb == NULL) {
         return TASK_INIT_ERROR;
@@ -168,7 +180,7 @@ enum addStatus_e tsAddTask(task_t *task, cb_t *cb, cbParam_t *cbParam)
     // initialize new task
     task->cb = cb;
     task->cbParam = cbParam;
-    task->type = TASK_QUEUED;
+    task->type = singleShot ? TASK_SINGLE_SHOT : TASK_RECURRING;
     addTask(&conditionalTasks, task);
     return TASK_INIT_OK;
 }
@@ -193,8 +205,8 @@ enum addStatus_e tsAddConditionalTask(task_t *task, cb_t *cb, cbParam_t *cbParam
     task->cb = cb;
     task->cbParam = cbParam;
     task->type = TASK_CONDITIONAL;
-    task->params.conditional.cb = conditionalCheck;
-    task->params.conditional.conditionalParam = conditionalParam;
+    task->state.conditional.cb = conditionalCheck;
+    task->state.conditional.conditionalParam = conditionalParam;
     addTask(&conditionalTasks, task);
     return TASK_INIT_OK;
 }
@@ -226,8 +238,10 @@ enum addStatus_e tsAddConditionalSingleShotTask(task_t *task, cb_t *cb, cbParam_
 
 /*! Remove a task from the scheduler. Task will be marked for removal immediately
  * and will no longer be called by the scheduler. The memory where the data
- * structure is stored should not be released until after the next scheduler
- * execution however.
+ * structure is stored should not be released until after the *next* call to
+ * `tsMain()` has returned. A call to `tsAdd...Task()` from within a task's
+ * callback where `task_t *` is equal to the callback's `task_t` is permitted,
+ * since the task will simply be re-initialized in place.
  * @param task Pointer to data structure where task is stored.
  */
 void tsRemoveTask(task_t *task)
@@ -238,13 +252,23 @@ void tsRemoveTask(task_t *task)
     }
 }
 
+/*! Return the pointer to the data structure for the task currently called or
+ * `NULL` if no task is currently called.
+ * @return  Pointer to `task_t` for the task currently called or `NULL`
+ * `tsMain()`.
+ */
+task_t * tsGetCurrentTask(void)
+{
+    return currentTask;
+}
+
 /*! Task scheduler function. Call this function at regular intervals.
  * Function first iterates through timed tasks, followed by conditional or
  * single-shot tasks.
  * As a performance example, `tsMain` runs for ~18µs to iterate through 3
  * timed tasks on an ATtiny32xx running at 16MHz. This is when no tasks are
  * actually called. Adding a single conditional task with a trivial
- * `conditionalCheck` function `return flase;` increases the runtime to 21µs.
+ * `conditionalCheck` function `return false;` increases the runtime to 21µs.
  */
 void tsMain(void)
 {
@@ -260,17 +284,17 @@ void tsMain(void)
      */
     task_t *t = timedTasks.first;
     task_t *up = NULL;
-
     while(t != NULL) {
+        currentTask = t;
         // check timers and call callbacks if necessary
         if (t->type == TASK_TIMED) {
-            if (rtcTimerActive(&t->params.timed.dueTimer) == 0) {
+            if (rtcTimerActive(&t->state.timed.dueTimer) == 0) {
                 // task timer has elapsed
                 // printf_P(PSTR("-> %p\r\n"), t);
                 t->cb(t->cbParam);
-                if (t->params.timed.period > 0) {
+                if (t->state.timed.period > 0) {
                     // task is not single shot, renew timer
-                    rtcTimerAddPeriod(&t->params.timed.dueTimer, t->params.timed.period);
+                    rtcTimerAddPeriod(&t->state.timed.dueTimer, t->state.timed.period);
                 } else {
                     t->type = TASK_EMPTY;
                 }
@@ -292,24 +316,29 @@ void tsMain(void)
     mergeAddList(&conditionalTasks);
     t = conditionalTasks.first;
     up = NULL;
-
     while(t != NULL) {
+        currentTask = t;
         switch (t->type) {
-            case TASK_QUEUED:
+            case TASK_RECURRING:
+                // printf_P(PSTR("-> %p\r\n"), t);
+                t->cb(t->cbParam);
+                break;
+
+            case TASK_SINGLE_SHOT:
                 // printf_P(PSTR("-> %p\r\n"), t);
                 t->cb(t->cbParam);
                 t->type = TASK_EMPTY;
                 break;
 
             case TASK_CONDITIONAL:
-                if (t->params.conditional.cb(t->params.conditional.conditionalParam) == true) {
+                if (t->state.conditional.cb(t->state.conditional.conditionalParam) == true) {
                     // printf_P(PSTR("-> %p\r\n"), t);
                     t->cb(t->cbParam);
                 }
                 break;
 
             case TASK_CONDITIONAL_SH:
-                if (t->params.conditional.cb(t->params.conditional.conditionalParam) == true) {
+                if (t->state.conditional.cb(t->state.conditional.conditionalParam) == true) {
                     // printf_P(PSTR("-> %p\r\n"), t);
                     t->cb(t->cbParam);
                     t->type = TASK_EMPTY;
@@ -329,4 +358,6 @@ void tsMain(void)
         }
         t = t->next;
     }
+    // reset current task pointer
+    currentTask = NULL;
 }
