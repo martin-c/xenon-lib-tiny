@@ -108,12 +108,12 @@ void spiIo(uint8_t buf[], uint8_t len)
  */
 void spiIo_24(uint8_t buf[3])
 {
-    SPI0.INTFLAGS |= SPI_TXCIF_bm;
     SPI0.DATA = buf[0];
     SPI0.DATA = buf[1];
     loop_until_bit_is_set(SPI0.INTFLAGS, SPI_DREIF_bp);
-    SPI0.DATA = buf[2];
     buf[0] = SPI0.DATA;
+    SPI0.INTFLAGS |= SPI_TXCIF_bm;
+    SPI0.DATA = buf[2];
     loop_until_bit_is_set(SPI0.INTFLAGS, SPI_TXCIF_bp);
     buf[1] = SPI0.DATA;
     buf[2] = SPI0.DATA;
@@ -126,12 +126,12 @@ void spiIo_24(uint8_t buf[3])
  */
 void spiIo_24_r(uint8_t buf[3])
 {
-    SPI0.INTFLAGS |= SPI_TXCIF_bm;
     SPI0.DATA = buf[2];
     SPI0.DATA = buf[1];
     loop_until_bit_is_set(SPI0.INTFLAGS, SPI_DREIF_bp);
-    SPI0.DATA = buf[0];
     buf[2] = SPI0.DATA;
+    SPI0.INTFLAGS |= SPI_TXCIF_bm;
+    SPI0.DATA = buf[0];
     loop_until_bit_is_set(SPI0.INTFLAGS, SPI_TXCIF_bp);
     buf[1] = SPI0.DATA;
     buf[0] = SPI0.DATA;
