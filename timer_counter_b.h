@@ -58,6 +58,7 @@ struct timerCounterBEventConfig_s {
 /*** Public Functions --------------------------------------------------------*/
 /*! \publicsection */
 uint16_t timerCounterBGetCounter(TCB_t *tcb);
+void timerCounterBSetCounter(TCB_t *tcb, const uint16_t cnt);
 uint16_t timerCounterBGetCapture(TCB_t *tcb);
 void timerCounterBSetCompare(TCB_t *tcb, const uint16_t cmp);
 void timerCounterBConfigEvent(TCB_t *tcb, const struct timerCounterBEventConfig_s *config);

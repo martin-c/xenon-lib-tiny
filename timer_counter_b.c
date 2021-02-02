@@ -38,6 +38,15 @@ uint16_t timerCounterBGetCounter(TCB_t *tcb)
     return tcb->CNT;
 }
 
+/*! Set Timer/Counter B counter value.
+ * @param tcb Pointer to TCB peripheral.
+ * @cnt The timer/counter value to set.
+ */
+void timerCounterBSetCounter(TCB_t *tcb, const uint16_t cnt)
+{
+    tcb->CNT = cnt;
+}
+
 /*! Get Timer/Counter B capture/compare value.
  * @param tcb Pointer to TCB peripheral.
  * @return The capture/compare value.
